@@ -1,0 +1,20 @@
+# Pokemon TCG Discord Bot
+* Functionality
+** Card List
+- Search by Pokemon name
+
+* Tasks
+** DONE Fix Timeout Option
+CLOSED: [2024-01-30 Tue 13:47]
+:LOGBOOK:
+- State "DONE"       from "IN PROGRESS" [2024-01-30 Tue 13:47]
+:END:
+
+** TODO Basic Command Guide
+** TODO Basic Dataset
+
+* Ideas
+** Booster Pack Implementation
+** Plusle and Minun Arrows
+- https://www.pinterest.com/pin/388365167862305807/
+- https://www.pinterest.com/pin/388365167862305810/
