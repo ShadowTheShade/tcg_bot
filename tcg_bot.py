@@ -94,28 +94,27 @@ class CardList(discord.Embed):
         def scroll(self, dir):
             self.cl.scroll(dir)
 
-        @discord.ui.button(label=None, row=0, style=discord.ButtonStyle.primary, emoji='◀️') # Create a button with the label
+        @discord.ui.button(label=None, row=0, style=discord.ButtonStyle.primary, emoji='<:minun:1203761951021469696>') # Create a button with the label
         async def left_button_callback(self, interaction, button):
             self.scroll(-1)
             await interaction.response.edit_message(embed=self.cl.embed) # Edit the embed
 
-        @discord.ui.button(label=None, row=0, style=discord.ButtonStyle.primary, emoji='▶️') # Create a button with the label
+        @discord.ui.button(label=None, row=0, style=discord.ButtonStyle.primary, emoji='<:plusle:1203762199684710490>') # Create a button with the label
         async def right_button_callback(self, interaction, button):
             self.scroll(1)
             await interaction.response.edit_message(embed=self.cl.embed) # Edit the embed
 
-    def __init__(self, name, cards, current):
+    def __init__(self, cards, current):
         super().__init__()
 
         self.cards = cards
         self.current = current
+        self.name = cards['name'][self.current]
         self.numCards = cards.shape[0]
-        self.name = name
-
 
         self.embed = discord.Embed()
         self.embed.set_image(url=cards['images_large'][current])
-        self.embed.add_field(name=name.capitalize(),value=self.cards['set_series'][self.current])
+        self.embed.add_field(name=self.name,value=self.cards['set_series'][self.current])
         self.embed.set_footer(text=str(current+1)+"/"+str(len(cards)))
 
         self.view = self.MyView(timeout=30)
@@ -125,9 +124,10 @@ class CardList(discord.Embed):
 
     def scroll(self, dir):
         self.current = (self.current + dir) % self.numCards
+        self.name = self.cards['name'][self.current]
         self.embed.set_image(url=self.cards['images_large'][self.current])
         self.embed.remove_field(0)
-        self.embed.add_field(name=self.name.capitalize(),value=self.cards['set_series'][self.current])
+        self.embed.add_field(name=self.name,value=self.cards['set_series'][self.current])
         self.embed.set_footer(text=str(self.current+1)+"/"+str(self.numCards))
 
 @bot.command()
@@ -140,17 +140,107 @@ async def card(ctx, *args):
     cards = pd.read_sql_query(f"SELECT * FROM cards WHERE LOWER(name) LIKE '%{name}%'", cardCon)
     cardCon.close()
 
-    # numCards = cards.shape[0]
-
-    # if(len(args)>1):
-    #     current = (int(args[1])-1) % numCards
-    # else:
-    #     current = 0
-
-    cardList = CardList(name, cards, 0)
+    cardList = CardList(cards, 0)
 
     # Send image and store message content
     msg = await ctx.channel.send(embed=cardList.embed, view=cardList.view)
     cardList.msg = msg
+
+class PackSet(discord.Embed):
+
+    class MyView(discord.ui.View): # Create a class called MyView that subclasses discord.ui.View
+
+        def _init__(self):
+            super().__init__()
+            self.cl = None
+
+        async def on_timeout(self):
+            self.clear_items()
+            self.cl.embed.set_footer(text="Timed Out.")
+            await self.cl.msg.edit(embed=self.cl.embed, view=None) # Edit the embed
+
+
+        def scroll(self, dir):
+            self.cl.scroll(dir)
+
+        @discord.ui.button(label=None, row=0, style=discord.ButtonStyle.primary, emoji='<:minun:1203761951021469696>') # Create a button with the label
+        async def left_button_callback(self, interaction, button):
+            self.scroll(-1)
+            await interaction.response.edit_message(embed=self.cl.embed) # Edit the embed
+
+        @discord.ui.button(label=None, row=0, style=discord.ButtonStyle.primary, emoji='<:plusle:1203762199684710490>') # Create a button with the label
+        async def right_button_callback(self, interaction, button):
+            self.scroll(1)
+            await interaction.response.edit_message(embed=self.cl.embed) # Edit the embed
+
+    def __init__(self, packSet, cards, current):
+        super().__init__()
+
+        self.cards = cards
+        self.current = current
+        self.numCards = cards.shape[0]
+        self.packSet = packSet
+
+        self.embed = discord.Embed()
+        self.embed.set_image(url=cards['images_large'][current])
+        self.embed.add_field(name=cards['name'][self.current].capitalize(),value=self.cards['set_series'][self.current])
+        self.embed.set_footer(text=str(current+1)+"/"+str(len(cards)))
+
+        self.view = self.MyView(timeout=30)
+        self.view.cl = self
+
+        self.msg = None
+
+    def scroll(self, dir):
+        self.current = (self.current + dir) % self.numCards
+        self.embed.set_image(url=self.cards['images_large'][self.current])
+        self.embed.remove_field(0)
+        self.embed.add_field(name=self.cards['name'][self.current].capitalize(),value=self.cards['set_series'][self.current])
+        self.embed.set_footer(text=str(self.current+1)+"/"+str(self.numCards))
+
+@bot.command()
+async def pack(ctx, *args):
+    packSet = str(args[0]).lower()
+
+    # Database Connection
+    cardCon = sqlite3.connect('cards.db')
+
+    cards = pd.read_sql_query(f"SELECT * FROM cards WHERE LOWER(set_series) LIKE '%{packSet}%'", cardCon)
+    cardCon.close()
+
+    packFrame = pd.DataFrame()
+
+    packSize = 10
+    commons = 4
+    uncommons = 3
+    energies = 1
+    holos = 1
+    rares = 1
+
+    commonCards = cards.loc[cards['rarity'] == "Common"]
+    for i in range(0,commons):
+        packFrame = pd.concat([packFrame, commonCards.iloc[[np.random.randint(0,commonCards.shape[0])]]], ignore_index=True)
+
+    uncommonCards = cards.loc[cards['rarity'] == "Uncommon"]
+    for i in range(0,uncommons):
+        packFrame = pd.concat([packFrame, uncommonCards.iloc[[np.random.randint(0,uncommonCards.shape[0])]]], ignore_index=True)
+
+    energyCards = cards.loc[cards['types'] == 'None'].loc[cards['subtypes'] == "['Basic']"]
+    for i in range(0,energies):
+        packFrame = pd.concat([packFrame, energyCards.iloc[[np.random.randint(0,energyCards.shape[0])]]], ignore_index=True)
+
+    holoCards = cards.loc[cards['rarity'] == "Rare Holo"]
+    for i in range(0,holos):
+        packFrame = pd.concat([packFrame, holoCards.iloc[[np.random.randint(0,holoCards.shape[0])]]], ignore_index=True)
+
+    rareCards = cards.loc[(cards['rarity'].str.contains("Rare"))]
+    for i in range(0,rares):
+        packFrame = pd.concat([packFrame, rareCards.iloc[[np.random.randint(0,rareCards.shape[0])]]], ignore_index=True)
+
+    packSet = PackSet(packSet, packFrame, 0)
+
+    # Send image and store message content
+    msg = await ctx.channel.send(embed=packSet.embed, view=packSet.view)
+    packSet.msg = msg
 
 bot.run(TOKEN)

@@ -10,9 +10,25 @@ CLOSED: [2024-01-30 Tue 13:47]
 - State "DONE"       from "IN PROGRESS" [2024-01-30 Tue 13:47]
 :END:
 
-** TODO Basic Command Guide
-** TODO Basic Dataset
+** DONE Basic Dataset
+CLOSED: [2024-02-04 Sun 12:45]
+:LOGBOOK:
+- State "DONE"       from "IN PROGRESS" [2024-02-04 Sun 12:45]
+:END:
 
+** TODO Basic Command Guide
+
+** TODO Pack Opening
+- Rarities
+- Pack codes
+- Set groupings
+- Set covers
+
+** TODO Fix search by name feature
+- Currently regexp match on whatever the input in
+- Allow spaces
+
+** TODO Currency & Store System
 * Ideas
 ** Booster Pack Implementation
 ** Plusle and Minun Arrows

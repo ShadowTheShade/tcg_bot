@@ -119,7 +119,7 @@ cards = Card.all()
 
 data = [(str(card.id) if hasattr(card, 'id') else None,\
          str(card.name) if hasattr(card, 'name') else None,\
-         str(card.supertype) if hasattr(card, 'type') else None,\
+         str(card.supertype) if hasattr(card, 'supertype') else None,\
          str(card.subtypes) if hasattr(card, 'subtypes') else None,\
          str(card.level) if hasattr(card, 'level') else None,\
          str(card.hp) if hasattr(card, 'hp') else None,\
